@@ -1,26 +1,25 @@
 #  coding: utf-8
 import json
-import sys
 
 from sklearn import svm
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from matplotlib import pyplot as plt
 
 from extract_metrics import extract_metrics_from_phrase
 
 
-def detect(phrase: str):
-    pass
-
+def calculate_success_rate(matrix: list[list[int]]):
+    total = 0
+    success = 0
+    for i in range(len(matrix)):
+        for j in range(len(matrix[i])):
+            total += matrix[i][j]
+            if i == j:
+                success += matrix[i][j]
+    
+    print(f"Success rate: {success / total * 100}%")
 
 def main():
-    # Read the file
-    file = open("phrases.txt", "r")
-    text = file.read()
-    file.close()
-    detect(text)
-
-
-def train():
     print("Training...")
 
     def extract_languages_from_source(source: list[dict]):
@@ -56,19 +55,22 @@ def train():
     json_new_data = json.loads(file.read())
     file.close()
     
-    classe_real = []
-    classe_predita = []
+    real_class = []
+    predicted_class = []
     for item in json_new_data:
         for key, phrase in item.items():
             predito = model.predict([extract_metrics_from_phrase(phrase)])
-            classe_real.append(key)
-            classe_predita.append(predito)
+            real_class.append(key)
+            predicted_class.append(predito)
             print( f"{key}: {predito}")
     
-    mat = confusion_matrix(classe_real, classe_predita)
-    cm_display = ConfusionMatrixDisplay(mat)
+    mat = confusion_matrix(real_class, predicted_class)
+    print(mat)
+    calculate_success_rate(mat)
+    cm_display = ConfusionMatrixDisplay(mat, display_labels=model.classes_)
     cm_display.plot()
+    plt.savefig("confusion_matrix.png")
     
 
 if __name__ == "__main__":
-    train()
+    main()
