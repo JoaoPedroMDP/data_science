@@ -1,12 +1,11 @@
 #  coding: utf-8
-
 import json
 import sys
-from lolviz import objviz
+
 from sklearn import svm
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 from extract_metrics import extract_metrics_from_phrase
-from sklearn.metrics import confusion_matrix
 
 
 def detect(phrase: str):
@@ -43,10 +42,10 @@ def train():
 
     phrases_metrics = []
     phrases_langs = []
-    for language in languages:
-        for phrase in languages[language]:
+    for language, phrases in languages.items():
+        for phrase in phrases:
             phrases_metrics.append(
-                extract_metrics_from_data_source(phrase))
+                extract_metrics_from_phrase(phrase))
             phrases_langs.append(language)
 
     print(phrases_metrics)
@@ -67,17 +66,9 @@ def train():
             print( f"{key}: {predito}")
     
     mat = confusion_matrix(classe_real, classe_predita)
-    print(mat)
+    cm_display = ConfusionMatrixDisplay(mat)
+    cm_display.plot()
     
 
 if __name__ == "__main__":
-    args = sys.argv
-    print(len(args))
-    if len(args) == 2:
-        train()
-        exit()
-    else:
-        main()
-        exit()
-
-    print("Usage: python lang_detector.py [train]")
+    train()

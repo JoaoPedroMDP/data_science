@@ -18,11 +18,25 @@ def words_vowel_percentage(words: list[str]):
     return count / len(words)
 
 
+def have_words_ending_with_n(words: list[str]):
+    count = 0
+    for word in words:
+        if word[-1] == "n":
+            count += 1
+
+    if count > 0:
+        return 1
+    
+    return 0
+
+
+
 def extract_metrics_from_phrase(phrase: str):
     splitted = phrase.split(" ")
     return [
         words_mean_length(splitted),
-        words_vowel_percentage(splitted)
+        words_vowel_percentage(splitted),
+        have_words_ending_with_n(splitted)
     ]
 
 
