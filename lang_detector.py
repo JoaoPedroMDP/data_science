@@ -62,7 +62,7 @@ def main():
             predito = model.predict([extract_metrics_from_phrase(phrase)])
             real_class.append(key)
             predicted_class.append(predito)
-            print( f"{key}: {predito}")
+            print( f"{phrase} ({key}): {predito}")
     
     mat = confusion_matrix(real_class, predicted_class)
     print(mat)
