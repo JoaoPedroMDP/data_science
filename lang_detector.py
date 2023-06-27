@@ -1,5 +1,6 @@
 #  coding: utf-8
 import json
+import pickle
 
 from sklearn import svm
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
@@ -7,6 +8,7 @@ from matplotlib import pyplot as plt
 
 from extract_metrics import extract_metrics_from_phrase
 
+MODEL_FILENAME = "model.pickle"
 
 def calculate_success_rate(matrix: list[list[int]]):
     total = 0
@@ -19,37 +21,50 @@ def calculate_success_rate(matrix: list[list[int]]):
     
     print(f"Success rate: {success / total * 100}%")
 
+
+def extract_languages_from_source(source: list[dict]):
+    languages = {}
+    for item in source:
+        for key, phrase in item.items():
+            if key not in languages:
+                languages[key] = []
+
+            languages[key].append(phrase)
+
+    return languages
+
+
+def look_for_trained_models():
+    filename = MODEL_FILENAME
+    try:
+        loaded_model = pickle.load(open(filename, "rb"))
+        print("Modelo carregado!!")
+        return loaded_model
+    except FileNotFoundError:
+        print("Não existem modelos prontos.")
+        return None
+
+
 def main():
-    print("Training...")
+    model = look_for_trained_models()
+    if not model:
+        file = open("train_data.json", "r")
+        json_train_data = json.loads(file.read())
+        file.close()
+        # Train the model
+        languages = extract_languages_from_source(json_train_data)
 
-    def extract_languages_from_source(source: list[dict]):
-        languages = {}
-        for item in source:
-            for key, phrase in item.items():
-                if key not in languages:
-                    languages[key] = []
+        phrases_metrics = []
+        phrases_langs = []
+        for language, phrases in languages.items():
+            for phrase in phrases:
+                phrases_metrics.append(
+                    extract_metrics_from_phrase(phrase))
+                phrases_langs.append(language)
 
-                languages[key].append(phrase)
-
-        return languages
-
-    file = open("train_data.json", "r")
-    json_train_data = json.loads(file.read())
-    file.close()
-    # Train the model
-    languages = extract_languages_from_source(json_train_data)
-
-    phrases_metrics = []
-    phrases_langs = []
-    for language, phrases in languages.items():
-        for phrase in phrases:
-            phrases_metrics.append(
-                extract_metrics_from_phrase(phrase))
-            phrases_langs.append(language)
-
-    print(phrases_metrics)
-    print(phrases_langs)
-    model = svm.SVC().fit(phrases_metrics, phrases_langs)
+        model = svm.SVC().fit(phrases_metrics, phrases_langs)
+        print("Salvando modelo...")
+        pickle.dump(model, open(MODEL_FILENAME, "wb"))
 
     file = open("new_data.json", "r")
     json_new_data = json.loads(file.read())
