@@ -18,6 +18,15 @@ def words_vowel_percentage(words: list[str]):
     return count / len(words)
 
 
+def words_ending_with_d_percentage(words: list[str]):
+    count = 0
+    for word in words:
+        if word.endswith("d"):
+            count += 1
+
+    return count / len(words)
+
+
 def count_substring_occurrences(words: list[str], substring: str):
     count = 0
     for word in words:
@@ -78,14 +87,15 @@ def have_words_ending_with_n(words: list[str]):
 def have_words_ending_with_l(words: list[str]):
     return have_words_ending_with(words, "l")
 
-
 def have_words_ending_with_ing(words: list[str]):
     return have_words_ending_with(words, "ing")
 
 def have_words_ending_with_th(words: list[str]):
     return have_words_ending_with(words, "th")
 
-# Duas consoantes no final da palavra
+def have_words_ending_with_d(words: list[str]):
+    return have_words_ending_with(words, "d")
+
 
 def extract_metrics_from_phrase(phrase: str):
     # 75% -> words_mean_length, words_vowel_percentage, have_words_ending_with_n, have_words_ending_with_ng, have_words_ending_with_l
@@ -98,6 +108,8 @@ def extract_metrics_from_phrase(phrase: str):
         have_words_ending_with_n,
         have_words_ending_with_ing,
         have_words_ending_with_l,
+        # have_words_ending_with_d,
+        # words_ending_with_d_percentage,
         # count_y_occurrences,
         # y_occurence_percentage,
         # have_words_ending_with_th,
@@ -111,5 +123,5 @@ def extract_metrics_from_phrase(phrase: str):
     metrics_values = []
     for metric in metrics:
         metrics_values.append(metric(splitted))
-    
+    # print(f"{' '.join(splitted)} : {metrics_values}")
     return metrics_values

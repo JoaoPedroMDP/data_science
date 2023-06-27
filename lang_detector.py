@@ -47,7 +47,7 @@ def look_for_trained_models():
         return None
 
 
-def main(phrase: str = None):
+def main(new_phrase: str = None, save: bool = False):
     model = look_for_trained_models()
     if not model:
         file = open("train_data.json", "r")
@@ -63,28 +63,38 @@ def main(phrase: str = None):
                 phrases_metrics.append(
                     extract_metrics_from_phrase(phrase))
                 phrases_langs.append(language)
-
+        print(phrases_metrics[0:10])
         model = svm.SVC().fit(phrases_metrics, phrases_langs)
-        print("Salvando modelo...")
-        pickle.dump(model, open(MODEL_FILENAME, "wb"))
+        if save:
+            print("Salvando modelo...")
+            pickle.dump(model, open(MODEL_FILENAME, "wb"))
 
-    file = open("new_data.json", "r")
-    json_new_data = json.loads(file.read())
-    file.close()
+    with open("new_data.json", "r") as file:
+        json_new_data = json.loads(file.read())
     
-    if phrase:
-        predito = model.predict([extract_metrics_from_phrase(phrase)])
-        print( f"{phrase} {predito}")
+    errors = []
+    if new_phrase:
+        prediction = model.predict([extract_metrics_from_phrase(new_phrase)])
+        print( f"{new_phrase} {prediction}")
     else:
         real_class = []
         predicted_class = []
         for item in json_new_data:
             for key, phrase in item.items():
-                predito = model.predict([extract_metrics_from_phrase(phrase)])
+                prediction = model.predict([extract_metrics_from_phrase(phrase)])
                 real_class.append(key)
-                predicted_class.append(predito)
-                print( f"{phrase} ({key}): {predito}")
+                predicted_class.append(prediction)
+                if prediction != key:
+                    errors.append((key, prediction, phrase))
+
+                print( f"{phrase} ({key}): {prediction}")
         
+        if len(errors) > 0:
+            print("Erros:")
+            print("Classe correta: classe predita (frase)")
+            for error in errors:
+                print(f"{error[0]}: {error[1]} ({error[2]})")
+
         mat = confusion_matrix(real_class, predicted_class)
         print(mat)
         calculate_success_rate(mat)
@@ -99,5 +109,6 @@ if __name__ == "__main__":
                     description='Detecta, entre as linguagens português, inglês e espanhol, a linguagem de um texto.'
                     )
     parser.add_argument('--phrase', required=False, help='Frase a ser analisada.')
+    parser.add_argument('--save', help='Se deve salvar o modelo treinado.', action='store_true')
     args = parser.parse_args()
-    main(args.phrase)
+    main(args.phrase, args.save)
