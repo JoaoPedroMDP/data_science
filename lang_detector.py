@@ -1,4 +1,5 @@
 #  coding: utf-8
+import argparse
 import json
 import pickle
 
@@ -7,6 +8,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from matplotlib import pyplot as plt
 
 from extract_metrics import extract_metrics_from_phrase
+
 
 MODEL_FILENAME = "model.pickle"
 
@@ -45,7 +47,7 @@ def look_for_trained_models():
         return None
 
 
-def main():
+def main(phrase: str = None):
     model = look_for_trained_models()
     if not model:
         file = open("train_data.json", "r")
@@ -70,22 +72,32 @@ def main():
     json_new_data = json.loads(file.read())
     file.close()
     
-    real_class = []
-    predicted_class = []
-    for item in json_new_data:
-        for key, phrase in item.items():
-            predito = model.predict([extract_metrics_from_phrase(phrase)])
-            real_class.append(key)
-            predicted_class.append(predito)
-            print( f"{phrase} ({key}): {predito}")
-    
-    mat = confusion_matrix(real_class, predicted_class)
-    print(mat)
-    calculate_success_rate(mat)
-    cm_display = ConfusionMatrixDisplay(mat, display_labels=model.classes_)
-    cm_display.plot()
-    plt.savefig("confusion_matrix.png")
+    if phrase:
+        predito = model.predict([extract_metrics_from_phrase(phrase)])
+        print( f"{phrase} {predito}")
+    else:
+        real_class = []
+        predicted_class = []
+        for item in json_new_data:
+            for key, phrase in item.items():
+                predito = model.predict([extract_metrics_from_phrase(phrase)])
+                real_class.append(key)
+                predicted_class.append(predito)
+                print( f"{phrase} ({key}): {predito}")
+        
+        mat = confusion_matrix(real_class, predicted_class)
+        print(mat)
+        calculate_success_rate(mat)
+        cm_display = ConfusionMatrixDisplay(mat, display_labels=model.classes_)
+        cm_display.plot()
+        plt.savefig("confusion_matrix.png")
     
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+                    prog='LangDetector',
+                    description='Detecta, entre as linguagens português, inglês e espanhol, a linguagem de um texto.'
+                    )
+    parser.add_argument('--phrase', required=False, help='Frase a ser analisada.')
+    args = parser.parse_args()
+    main(args.phrase)
